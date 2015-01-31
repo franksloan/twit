@@ -18,58 +18,69 @@ function datestring () {
 };
 
 setInterval(function() {
-  bot.twit.get('followers/ids', function(err, reply) {
+  bot.twit.get('friends/ids', function(err, reply) {
+    console.log("start");
     if(err) return handleError(err)
     console.log('\n# followers:' + reply.ids.length.toString());
   });
   var rand = Math.random();
 
-  if(rand <= 0.10) {      //  tweet popular github tweet
+  if(rand <= 0.0001) {      //  tweet popular github tweet
+    console.log("One");
     var params = {
-        q: 'github.com/'
-      , since: datestring()
+        q: 'after work drinks',
+        lang: 'en'
+      // , since: datestring()
       , result_type: 'mixed'
     };
-    bot.twit.get('search', params, function (err, reply) {
+    bot.twit.get('search/tweets', params, function (err, reply) {
       if(err) return handleError(err);
-
+      console.log(params.q);
       var max = 0, popular;
 
-      var tweets = reply.results
-        , i = tweets.length;
+      var tweets = reply.statuses;
+      // console.log(tweets);
+      var i = tweets.length;
+      console.log(i);
+        
 
       while(i--) {
         var tweet = tweets[i]
-          , popularity = tweet.metadata.recent_retweets;
-
+          , popularity = tweet.retweet_count;
+          console.log(popularity);
         if(popularity > max) {
           max = popularity;
           popular = tweet.text;
         }
       }
+      console.log(popular);
 
       bot.tweet(popular, function (err, reply) {
+        console.log("two");
         if(err) return handleError(err);
 
         console.log('\nTweet: ' + (reply ? reply.text : reply));
       })
     });
-  } else if(rand <= 0.55) { //  make a friend
+  } else if(rand <= 0.99) { console.log("Three");//  make a friend
     bot.mingle(function(err, reply) {
+      
       if(err) return handleError(err);
 
       var name = reply.screen_name;
       console.log('\nMingle: followed @' + name);
     });
-  } else {                  //  prune a friend
+  } else {
+  console.log("Four");                  //  prune a friend
     bot.prune(function(err, reply) {
+      
       if(err) return handleError(err);
 
       var name = reply.screen_name
       console.log('\nPrune: unfollowed @'+ name);
     });
   }
-}, 40000);
+}, 10000);
 
 function handleError(err) {
   console.error('response status:', err.statusCode);
