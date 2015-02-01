@@ -80,7 +80,7 @@ setInterval(function() {
       console.log('\nPrune: unfollowed @'+ name);
     });
   }
-}, 10000);
+}, 30000);
 
 function handleError(err) {
   console.error('response status:', err.statusCode);

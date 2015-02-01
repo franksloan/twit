@@ -1,5 +1,4 @@
 //
-//
 //  Bot
 //  class for performing various twitter actions
 //
@@ -22,20 +21,19 @@ Bot.prototype.tweet = function (status, callback) {
 };
 
 //
-//  choose a random friend of one of your followers, and follow that user
+//  choose two of your followers and if they have a friend in
+//  common follow that friend
 //
 Bot.prototype.mingle = function (callback) {
   var self = this;
-  console.log('hi');
+  
   this.twit.get('followers/ids', function(err, reply) {
-    console.log('he');
+    
       if(err) { return callback(err); }
       //Get a list of bot's followers and chooses a random one
       var followers = reply.ids
         , randFollower = null
         , randFollowerMatch = null;
-        console.log('No. followers:');
-        console.log(followers.length);
         
         //Get a random one of tomBot's followers' ids
         //Then remove that id from list
@@ -43,45 +41,42 @@ Bot.prototype.mingle = function (callback) {
         delete followers.randFollower1;
         randFollower2 = randIndex(followers);
         
-        console.log("This randFollower:" + randFollower1);
         //Get a list of the friends of the chosen random follower
         self.twit.get('friends/list', { user_id: randFollower1 }, function(err, reply) {
           if(err) { return callback(err); }
           
           //Get the user list
-          var randFFriends1 = reply.users;
-          var i = randFFriends1.length;
-          var possibleMatches = [];
+          var randFFriends1 = reply.users
+            , i = randFFriends1.length
+            , possibleMatches = [];
 
           //While there are still users to look over
           //and the random follower has not been chosen yet
           while(i--){
-            console.log(i);
             //
-            var randFFriend1 = randIndex(randFFriends1);
-            var popularity = randFFriend1.followers_count;
-            console.log("Name:");
-            console.log(randFFriend1.name);
-            console.log(popularity);
+            var randFFriend1 = randFFriends1[i]
+              , popularity = randFFriend1.followers_count;
             //Determine how many friends the user we are looking over has
             if (popularity < 1000) {
               //create an array ids of friends with less than 1000 followers
               possibleMatches.push(randFFriend1.id);
-              console.log("Chosen person");
-              console.log(possibleMatches);
             }
           }
-          //Now look through the second random follower's friends
+          //Now look through the second random follower's friends randFollower2
           self.twit.get('friends/ids', { user_id: randFollower2 }, function(err, reply) {
             if(err) { return callback(err); }
-            var randFFriends2 = reply.ids;
-            var possibleMatch;
-            var userId;
-            for(var j = 0; j < possibleMatches.length; i++){
-              possibleMatch = possibleMatches[i];
+            var randFFriends2 = reply.ids
+              , possibleMatch
+              , userId;
+            // Loop over matches list from 1st random follower
+            for(var j = 0; j < possibleMatches.length; j++){
+              possibleMatch = possibleMatches[j];
+              // Loop over matches from 2nd random follower
               for(var id in randFFriends2){
-                userId = possibleMatches[id];
+                userId = randFFriends2[id];    
+                //if there is a mutual friend and him/her
                 if(possibleMatch === userId){
+                  console.log('Match found');
                   self.twit.post('friendships/create', { id: userId }, callback);
                 }
               }
