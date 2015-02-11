@@ -24,11 +24,14 @@ setInterval(function() {
     console.log('\n# followers:' + reply.ids.length.toString());
   });
   var rand = Math.random();
-
-  if(rand <= 0.0001) {      //  tweet popular github tweet
-    console.log("One");
+  var quotes = ['quite honestly', 'drinks', 'cornwall goodtimes', 'g and t', 
+    'the weekend', 'absolutely ridiculous', 'quite literally', 
+    "so aloof", 'literally amazing', 'the dambusters', 'lager lager'];
+  if(rand <= 0.01) {      //  tweet popular github tweet
+    var randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    console.log(randomQuote);
     var params = {
-        q: 'after work drinks',
+        q: randomQuote,
         lang: 'en'
       // , since: datestring()
       , result_type: 'mixed'
@@ -42,7 +45,6 @@ setInterval(function() {
       // console.log(tweets);
       var i = tweets.length;
       console.log(i);
-        
 
       while(i--) {
         var tweet = tweets[i]
@@ -54,6 +56,14 @@ setInterval(function() {
         }
       }
       console.log(popular);
+      var chrSpace = 140 - popular.length;
+      randomQuote = randomQuote.replace(/\s/g, '');
+      randomQuote = '#' + randomQuote;
+      if (randomQuote.length < chrSpace) {
+        popular += ' ' + randomQuote;
+      } else if (chrSpace >= 5) {
+        popular += ' ' + '#lol';
+      }
 
       bot.tweet(popular, function (err, reply) {
         console.log("two");
@@ -62,7 +72,39 @@ setInterval(function() {
         console.log('\nTweet: ' + (reply ? reply.text : reply));
       })
     });
-  } else if(rand <= 0.99) { console.log("Three");//  make a friend
+  } else if(rand <= 0.87) {
+    //Tweet a friend with a random quote
+    var params = {
+      screen_name: 'FactsAndAll'
+    };
+    bot.twit.get('statuses/user_timeline', params, function (err, reply) {
+      if(err) return handleError(err);
+      var randFactsAndAll = randIndex(reply);
+      var personalTweet = randFactsAndAll.text;
+      console.log(personalTweet);
+
+        bot.twit.get('friends/ids', function(err, reply) {
+          if(err) return handleError(err);
+          var randFriend = randIndex(reply.ids);
+          console.log(randFriend);
+          bot.twit.get('friendships/lookup', {user_id: randFriend}, function(err, reply) {
+            if(err) return handleError(err);
+            console.log(reply[0]);
+            var randFriendName = reply[0].screen_name;
+            console.log(randFriendName);
+            personalTweet = '@' + randFriendName + '  ' + personalTweet;
+            personalTweet = personalTweet.slice(0,139);
+            bot.tweet(personalTweet, function (err, reply) {
+              if(err) return handleError(err);
+              console.log('\nTweet: ' + (reply ? reply.text : reply));
+            });
+          });
+        });
+
+    });
+
+
+  } else if(rand <= 0.88) { console.log("Three");//  make a friend
     bot.mingle(function(err, reply) {
       
       if(err) return handleError(err);
@@ -70,8 +112,69 @@ setInterval(function() {
       var name = reply.screen_name;
       console.log('\nMingle: followed @' + name);
     });
+  } else if(rand <= 0.89) {
+    var params = {};
+    //Favourite a random tweet from bot's timeline
+    bot.twit.get('statuses/home_timeline', params, function(err, reply) {
+      if(err) return handleError(err);
+      console.log("Try to favorite a random tweet");
+      var timelineTweets = reply;
+      var possibleFavorite = randIndex(timelineTweets);    
+      if (possibleFavorite.favorited == false) {
+        var favorite = possibleFavorite.id;
+        bot.favorite(favorite, function(err, reply) {
+          if(err) return handleError(err);
+          console.log('\nFavorite: ' + (reply ? reply.text : reply));
+        });
+      };
+    });
+  } else if(rand <= 0.90) {
+    var params =  {};
+    //Favourite a random tweet from where bot has been mentioned
+    bot.twit.get('statuses/mentions_timeline', params, function(err, reply) {
+      if(err) return handleError(err);
+      console.log("Try to favorite a mention");
+      var mentionTweets = reply;
+      var possibleFavorite = randIndex(mentionTweets);
+      if (possibleFavorite.favorited == false) {
+        var favorite = possibleFavorite.id;
+        bot.favorite(favorite, function(err, reply) {
+          if(err) return handleError(err);
+          console.log('\nFavorite: ' + (reply ? reply.text : reply));
+        });
+      };
+    });
+  } else if(rand <= 0.96) {
+    var params = {};
+    //Retweet a random tweet from bot's timeline
+    bot.twit.get('statuses/home_timeline', params, function(err, reply) {
+      if(err) return handleError(err);
+      console.log("Retweet a timeline tweet");
+      var timelineTweets = reply;
+      var possibleRetweet = randIndex(timelineTweets);
+      var retweet = possibleRetweet.id;
+      bot.retweet(retweet, function(err, reply) {
+        if(err) return handleError(err);
+        console.log('\nRetweet: ' + (reply ? reply.text : reply));
+      });
+      
+    });
+  } else if(rand <= 0.97) {
+    var params =  {};
+    //Favourite a random tweet from where bot has been mentioned
+    bot.twit.get('statuses/mentions_timeline', params, function(err, reply) {
+      if(err) return handleError(err);
+      console.log("Retweet a mention");
+      var mentionTweets = reply;
+      var retweetStatus = randIndex(mentionTweets);
+      var retweetStatusId = retweetStatus.id;
+      bot.retweet(retweetStatusId, function(err, reply) {
+        if(err) return handleError(err);
+        console.log('\nRetweet: ' + (reply ? reply.text : reply));
+      });
+    });
   } else {
-  console.log("Four");                  //  prune a friend
+  console.log("Prune someone");                  //  prune a friend
     bot.prune(function(err, reply) {
       
       if(err) return handleError(err);
@@ -85,4 +188,9 @@ setInterval(function() {
 function handleError(err) {
   console.error('response status:', err.statusCode);
   console.error('data:', err.data);
-}
+};
+
+function randIndex (arr) {
+  var index = Math.floor(arr.length*Math.random());
+  return arr[index];
+};

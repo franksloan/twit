@@ -20,6 +20,14 @@ Bot.prototype.tweet = function (status, callback) {
   this.twit.post('statuses/update', { status: status }, callback);
 };
 
+Bot.prototype.favorite = function(status, callback) {
+  this.twit.post('favorites/create', { id: status } , callback);
+};
+
+Bot.prototype.retweet = function(status, callback) {
+  this.twit.post('statuses/retweet/' + status, callback);
+};
+
 //
 //  choose two of your followers and if they have a friend in
 //  common follow that friend
